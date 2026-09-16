@@ -1,8 +1,7 @@
-from pathlib import Path
+from config import get_weekly_config_path
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-CONFIG_PATH = PROJECT_ROOT / "weekly_config.yaml"
+CONFIG_PATH = get_weekly_config_path()
 
 
 def load_engine_universe():

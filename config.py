@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -9,6 +11,42 @@ import yaml
 
 
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parent / "weekly_config.yaml"
+
+
+def get_weekly_config_path() -> Path:
+    """
+    Resolve the active weekly_v1 config path.
+
+    OPTIONS_FLOW_CONFIG_PATH is a deployment-only
+    override for persistent storage environments.
+
+    When unset, local behavior remains unchanged.
+
+    On first deployment, the tracked weekly_config.yaml
+    is copied to the persistent path if needed.
+    """
+
+    env_path = os.getenv("OPTIONS_FLOW_CONFIG_PATH")
+
+    if not env_path:
+        return DEFAULT_CONFIG_PATH
+
+    persistent_path = Path(
+        env_path
+    ).expanduser().resolve()
+
+    if not persistent_path.exists():
+        persistent_path.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
+        shutil.copy2(
+            DEFAULT_CONFIG_PATH,
+            persistent_path,
+        )
+
+    return persistent_path
 
 
 class ConfigError(Exception):
@@ -1075,11 +1113,15 @@ def calculate_config_hash(
 
 
 def load_weekly_config(
-    path: str | Path = DEFAULT_CONFIG_PATH,
+    path: str | Path | None = None,
     *,
     require_runtime_ready: bool = True,
 ) -> dict[str, Any]:
-    config_path = Path(path).resolve()
+    config_path = (
+        Path(path).resolve()
+        if path is not None
+        else get_weekly_config_path()
+    )
 
     if not config_path.exists():
         raise ConfigError(

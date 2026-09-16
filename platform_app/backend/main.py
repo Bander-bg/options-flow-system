@@ -1,3 +1,5 @@
+import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Form, HTTPException, Request
@@ -17,15 +19,26 @@ from platform_app.backend.paper_execution_bridge import (
     prepare_exit as paper_prepare_exit_service,
 )
 
+from weekly.db.migration_runner import run_migrations
+
 from platform_app.backend.engine_config_writer import (
     UniverseConfigWriteError,
     add_universe_ticker,
     delete_universe_ticker,
 )
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    if os.getenv("OPTIONS_FLOW_DB_PATH"):
+        run_migrations()
+
+    yield
+
+
 app = FastAPI(
     title="Options Flow Platform",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 BASE_DIR = Path(__file__).resolve().parents[1]

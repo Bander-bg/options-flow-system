@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
@@ -13,11 +14,20 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 def get_database_path() -> Path:
     """
-    Resolve weekly_trading.db from weekly_config.yaml.
+    Resolve the weekly_v1 SQLite database path.
 
-    Relative DB paths are always resolved from the
-    project root, not from the caller's working directory.
+    OPTIONS_FLOW_DB_PATH is a deployment-only override
+    for persistent storage environments such as Render.
+
+    When the environment variable is absent, local
+    behavior remains unchanged and weekly_config.yaml
+    remains authoritative.
     """
+
+    env_path = os.getenv("OPTIONS_FLOW_DB_PATH")
+
+    if env_path:
+        return Path(env_path).expanduser().resolve()
 
     config = load_weekly_config(
         require_runtime_ready=True
