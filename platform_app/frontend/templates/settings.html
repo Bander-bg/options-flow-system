@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الإعدادات</title>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar">
+        <div class="brand">BG</div>
+        <nav>
+            <a class="nav-link" href="/">لوحة التحكم</a>
+            <a class="nav-link" href="/universe">إدارة الأسهم</a>
+            <a class="nav-link" href="/signals">الإشارات</a>
+            <a class="nav-link" href="/alerts">التنبيهات</a>
+            <a class="nav-link" href="/positions">المراكز</a>
+            <a class="nav-link" href="/trades">الصفقات</a>
+            <a class="nav-link" href="/paper-trading">التداول الورقي</a>
+            <a class="nav-link" href="/outcomes">النتائج</a>
+            <a class="nav-link" href="/data-health">صحة البيانات</a>
+            <a class="nav-link active" href="/settings">الإعدادات</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+
+        <header class="page-header">
+            <div>
+                <h1 class="page-title">الإعدادات</h1>
+                <div class="subtitle">
+                    حالة المنصة وإعدادات المحرك الحقيقية
+                </div>
+            </div>
+            <div class="status-pill">ENGINE CONFIG</div>
+        </header>
+
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">حالة المنصة</h2>
+            </div>
+
+            <table>
+                <tbody>
+                    <tr>
+                        <th>وضع المنصة</th>
+                        <td>{{ settings.platform_mode }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>مصدر البيانات</th>
+                        <td>{{ settings.data_source }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>إصدار الاستراتيجية</th>
+                        <td>{{ settings.strategy_version }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>قاعدة بيانات المحرك</th>
+                        <td>{{ settings.engine_database or "—" }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>قراءة بيانات المحرك</th>
+                        <td>
+                            {% if settings.engine_connected %}
+                                <span class="badge positive">متصل</span>
+                            {% else %}
+                                <span class="badge negative">غير متصل</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th>Paper Preparation</th>
+                        <td>
+                            {% if settings.paper_preparation %}
+                                <span class="badge positive">مفعّل</span>
+                            {% else %}
+                                <span class="badge negative">غير مفعّل</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th>Broker Order Submission</th>
+                        <td>
+                            {% if settings.broker_order_submission %}
+                                <span class="badge positive">مربوط</span>
+                            {% else %}
+                                <span class="badge">غير مربوط</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th>Runtime</th>
+                        <td>
+                            {% if settings.runtime_controlled_by_platform %}
+                                <span class="badge positive">يدار من المنصة</span>
+                            {% else %}
+                                <span class="badge">مستقل عن واجهة المنصة</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th>اللغة</th>
+                        <td>{{ settings.language }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">إعدادات قاعدة البيانات</h2>
+            </div>
+
+            <table>
+                <tbody>
+                    <tr>
+                        <th>Journal Mode</th>
+                        <td>{{ settings.database_journal_mode }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Busy Timeout</th>
+                        <td>{{ settings.database_busy_timeout_ms }} ms</td>
+                    </tr>
+
+                    <tr>
+                        <th>Foreign Keys</th>
+                        <td>
+                            {{ "ON" if settings.database_foreign_keys else "OFF" }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+</div>
+</body>
+</html>

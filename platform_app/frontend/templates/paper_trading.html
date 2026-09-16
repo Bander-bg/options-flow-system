@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>التداول الورقي</title>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="brand">BG</div>
+        <a class="nav-link" href="/">لوحة التحكم</a>
+        <a class="nav-link" href="/universe">إدارة الأسهم</a>
+        <a class="nav-link" href="/signals">الإشارات</a>
+        <a class="nav-link" href="/alerts">التنبيهات</a>
+        <a class="nav-link" href="/positions">المراكز</a>
+        <a class="nav-link" href="/trades">الصفقات</a>
+        <a class="nav-link active" href="/paper-trading">التداول الورقي</a>
+        <a class="nav-link" href="/outcomes">النتائج</a>
+        <a class="nav-link" href="/data-health">صحة البيانات</a>
+        <a class="nav-link" href="/settings">الإعدادات</a>
+    </aside>
+
+    <main class="content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">التداول الورقي</h1>
+                <div class="subtitle">
+                    تجهيز يدوي لصفقات Paper من بيانات المحرك
+                </div>
+            </div>
+            <span class="status-pill">ENGINE DB · PAPER</span>
+        </div>
+
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">إشارات CONFIRMED الجاهزة للتجهيز</h2>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>السهم</th>
+                        <th>الاتجاه</th>
+                        <th>العقد</th>
+                        <th>الجودة</th>
+                        <th>الحالة</th>
+                        <th>الكمية</th>
+                        <th>الإجراء</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for signal in signals %}
+                    <tr>
+                        <td class="ticker">{{ signal.ticker }}</td>
+                        <td class="{{ 'bullish' if signal.direction|lower == 'bullish' else 'bearish' }}">
+                            {{ signal.direction }}
+                        </td>
+                        <td>
+                            {{ signal.contract_right or "—" }}
+                            /
+                            {% if signal.strike is not none %}{{ signal.strike }}{% else %}—{% endif %}
+                            /
+                            {% if signal.contract_amount is not none %}
+                                ${{ "{:,.0f}".format(signal.contract_amount) }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ signal.quality_grade or "—" }}
+                            /
+                            {% if signal.quality_score is not none %}
+                                {{ signal.quality_score }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge state-{{ signal.state|lower }}">
+                                {{ signal.state|state_ar }}
+                            </span>
+                        </td>
+                        <td>
+                            <input
+                                form="entry-{{ signal.signal_id }}"
+                                name="quantity"
+                                type="number"
+                                min="1"
+                                value="1"
+                                class="paper-quantity-input"
+                            >
+                        </td>
+                        <td>
+                            <form
+                                id="entry-{{ signal.signal_id }}"
+                                method="post"
+                                action="/paper-trading/prepare-entry"
+                            >
+                                <input
+                                    type="hidden"
+                                    name="signal_id"
+                                    value="{{ signal.signal_id }}"
+                                >
+                                <button type="submit">تجهيز دخول</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7">
+                            لا توجد إشارات CONFIRMED جاهزة للتجهيز حاليًا.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+                <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">المراكز المفتوحة</h2>
+                <span class="status-pill">
+                    P/L ? Option Mark
+                </span>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>السهم</th>
+                        <th>العقد</th>
+                        <th>الكمية</th>
+                        <th>سعر الدخول</th>
+                        <th>السعر الحالي</th>
+                        <th>الربح / الخسارة $</th>
+                        <th>الربح / الخسارة %</th>
+                        <th>الحالة</th>
+                        <th>الإجراء</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for position in positions %}
+                    <tr>
+                        <td class="ticker">
+                            {{ position.ticker }}
+                        </td>
+
+                        <td>
+                            {{ position.contract_symbol }}
+                        </td>
+
+                        <td>
+                            {{ position.quantity }}
+                        </td>
+
+                        <td>
+                            {% if position.entry_price is not none %}
+                                ${{ "%.2f"|format(position.entry_price) }}
+                            {% else %}
+                                ?
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if position.current_mark is not none %}
+                                <div class="paper-current-price">
+                                    ${{ "%.2f"|format(position.current_mark) }}
+                                </div>
+
+                                <div class="paper-quote-detail">
+                                    Bid ${{ "%.2f"|format(position.current_bid) }}
+                                    ?
+                                    Ask ${{ "%.2f"|format(position.current_ask) }}
+                                </div>
+                            {% else %}
+                                <span class="pnl-unavailable">?</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if position.pnl_dollars is not none %}
+                                <span class="
+                                    pnl-number
+                                    {% if position.pnl_state == 'PROFIT' %}
+                                        pnl-profit
+                                    {% elif position.pnl_state == 'LOSS' %}
+                                        pnl-loss
+                                    {% else %}
+                                        pnl-flat
+                                    {% endif %}
+                                ">
+                                    {% if position.pnl_dollars > 0 %}
+                                        +${{ "%.2f"|format(position.pnl_dollars) }}
+                                    {% elif position.pnl_dollars < 0 %}
+                                        -${{ "%.2f"|format(-position.pnl_dollars) }}
+                                    {% else %}
+                                        $0.00
+                                    {% endif %}
+                                </span>
+                            {% else %}
+                                <span class="pnl-unavailable">?</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if position.pnl_percent is not none %}
+                                <span class="
+                                    pnl-percent
+                                    {% if position.pnl_state == 'PROFIT' %}
+                                        pnl-profit
+                                    {% elif position.pnl_state == 'LOSS' %}
+                                        pnl-loss
+                                    {% else %}
+                                        pnl-flat
+                                    {% endif %}
+                                ">
+                                    {% if position.pnl_percent > 0 %}
+                                        +{{ "%.2f"|format(position.pnl_percent) }}%
+                                    {% elif position.pnl_percent < 0 %}
+                                        {{ "%.2f"|format(position.pnl_percent) }}%
+                                    {% else %}
+                                        0.00%
+                                    {% endif %}
+                                </span>
+                            {% else %}
+                                <span class="pnl-unavailable">?</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <span class="badge">
+                                {{ position.status }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {% if position.entry_price is not none %}
+                                <form
+                                    method="post"
+                                    action="/paper-trading/prepare-exit"
+                                >
+                                    <input
+                                        type="hidden"
+                                        name="position_id"
+                                        value="{{ position.position_id }}"
+                                    >
+                                    <button type="submit">
+                                        تجهيز خروج
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="status-pill">
+                                    بانتظار تسجيل تنفيذ الدخول
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                {% else %}
+                    <tr>
+                        <td colspan="9">
+                            لا توجد مراكز Paper مفتوحة حاليًا.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="paper-pnl-note">
+                الربح والخسارة غير المحققة محسوبة من عقد الأوبشن نفسه: سعر الدخول مقابل الـMark الحالي للعقد.
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">سجل عمليات Paper</h2>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>العملية</th>
+                        <th>السهم</th>
+                        <th>المركز</th>
+                        <th>الكمية</th>
+                        <th>الحالة</th>
+                        <th>الوضع</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for trade in trades|reverse %}
+                    <tr>
+                        <td>
+                            {% if trade.intent == "OPEN" %}
+                                تجهيز دخول
+                            {% elif trade.intent == "CLOSE" %}
+                                تجهيز خروج
+                            {% else %}
+                                {{ trade.intent or "—" }}
+                            {% endif %}
+                        </td>
+                        <td>{{ trade.ticker or "—" }}</td>
+                        <td>{{ trade.position_id or "—" }}</td>
+                        <td>{{ trade.quantity if trade.quantity is not none else "—" }}</td>
+                        <td><span class="badge">{{ trade.status or "—" }}</span></td>
+                        <td><span class="badge">{{ trade.execution_mode or "PAPER" }}</span></td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6">لا توجد عمليات Paper مسجلة حتى الآن.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        <div class="status-pill">
+            تجهيز الدخول والخروج لا يرسل أمرًا للوسيط. Market / Limit / TIF غير مربوطة في هذه المرحلة.
+        </div>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صحة البيانات</title>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar">
+        <div class="brand">BG</div>
+        <nav>
+            <a class="nav-link" href="/">لوحة التحكم</a>
+            <a class="nav-link" href="/universe">إدارة الأسهم</a>
+            <a class="nav-link" href="/signals">الإشارات</a>
+        <a class="nav-link" href="/alerts">التنبيهات</a>
+            <a class="nav-link" href="/positions">المراكز</a>
+            <a class="nav-link" href="/trades">الصفقات</a>
+        <a class="nav-link" href="/paper-trading">التداول الورقي</a>
+            <a class="nav-link" href="/outcomes">النتائج</a>
+            <a class="nav-link active" href="/data-health">صحة البيانات</a>
+            <a class="nav-link" href="/settings">الإعدادات</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+
+        <header class="page-header">
+            <div>
+                <h1 class="page-title">صحة البيانات</h1>
+                <div class="subtitle">مراقبة حالة مزودي البيانات والخدمات الرئيسية</div>
+            </div>
+            <div class="status-pill">مصدر البيانات: ENGINE</div>
+        </header>
+
+        <section class="stats">
+            <div class="stat-card">
+                <div class="stat-label">إجمالي المكونات</div>
+                <div class="stat-value">{{ items|length }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">سليمة</div>
+                <div class="stat-value positive">
+                    {{ items | selectattr("status", "equalto", "PASS") | list | length }}
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">متدهورة</div>
+                <div class="stat-value">
+                    {{ items | selectattr("status", "equalto", "DEGRADED") | list | length }}
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">محجوبة</div>
+                <div class="stat-value negative">
+                    {{ items | selectattr("status", "equalto", "BLOCKED") | list | length }}
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">غير معروفة</div>
+                <div class="stat-value">
+                    {{ items | selectattr("status", "equalto", "UNKNOWN") | list | length }}
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">حالة المكونات</h2>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>المكون</th>
+                        <th>الحالة</th>
+                        <th>المزود</th>
+                        <th>Feed</th>
+                        <th>التفاصيل</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td class="ticker">{{ item.component }}</td>
+
+                        <td>
+                            {% if item.status == "PASS" %}
+                                <span class="badge positive">سليم</span>
+                            {% elif item.status == "DEGRADED" %}
+                                <span class="badge">متدهور</span>
+                            {% elif item.status == "BLOCKED" %}
+                                <span class="badge negative">محجوب</span>
+                            {% elif item.status == "UNKNOWN" %}
+                                <span class="badge">غير معروف</span>
+                            {% else %}
+                                <span class="badge">{{ item.status }}</span>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ item.provider }}</td>
+                        <td>{{ item.feed }}</td>
+                        <td>{{ item.message }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+</div>
+</body>
+</html>
+
+
+
+

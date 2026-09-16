@@ -1,0 +1,216 @@
+strategy:
+  strategy_version: "weekly_v1"
+
+universe:
+  tickers:
+    - AAPL
+    - TSLA
+    - NVDA
+    - GOOGL
+    - META
+
+market:
+  timezone: "America/New_York"
+  regular_hours_only: true
+  stock_data_feed_preferred: "sip"
+  option_data_feed_preferred: "opra"
+
+target_expiry:
+  min_sessions: 3
+  max_sessions: 7
+
+scanner:
+  scan_interval_minutes: 3
+  deadline_processing_grace_polls: 1
+
+flow:
+  flow_threshold: 500000
+  rearm_aligned_flow_min: 500000
+  cooldown_minutes: 60
+  flow_accel_z: 3.0
+  flow_accel_floor: 100000
+  flow_accel_lookback_observations: 10
+
+price_action:
+  price_action_confirmation_minutes: 30
+
+  structure:
+    lookback_bars: 8
+    atr_break: 0.10
+
+  impulse:
+    body_lookback_bars: 10
+    body_expansion_multiplier: 1.5
+    body_min_atr: 0.50
+
+  participation:
+    rvol_min: 1.5
+    rvol_lookback_sessions: 20
+
+regime:
+  efficiency_ratio_min: 0.30
+  min_er_bars: 4
+  atr_1h_period: 14
+  atr_15m_period: 14
+
+volatility:
+  iv_percentile_high: 80
+
+  term_structure_risk:
+    enabled: false
+    threshold: null
+
+  iv_vs_rv_risk:
+    enabled: false
+    threshold: null
+
+contract_selector:
+  delta_min: 0.35
+  delta_max: 0.65
+
+  max_spread_pct: 0.12
+  max_option_quote_age_seconds: 60
+
+  standard_contract_size: 100
+  require_standard_contract: true
+  require_tradable_contract: true
+
+  max_budget: 5000
+
+  scenario:
+    horizon_days: 1
+    move_fraction: 0.50
+    theta_convention_status: "UNRESOLVED"
+    scenario_return_enabled: false
+
+  shadow_target_abs_delta: 0.50
+
+quality_scoring:
+
+  absolute_flow_strength:
+    weight: 15
+    minimum_flow: 500000
+    full_score_flow: 1500000
+
+  relative_flow_strength:
+    weight: 5
+    enabled: false
+    default_status: "UNKNOWN"
+
+  vwap_distance_atr:
+    weight: 10
+    interpolation_points:
+      - x: 0.00
+        points: 0
+      - x: 0.25
+        points: 5
+      - x: 0.50
+        points: 10
+      - x: 1.00
+        points: 10
+      - x: 1.50
+        points: 5
+      - x: 2.00
+        points: 0
+
+  efficiency_ratio_strength:
+    weight: 10
+    minimum_er: 0.30
+    maximum_er: 1.00
+
+  sweep_ratio:
+    weight: 15
+    breakpoint_ratio: 0.60
+    points_at_breakpoint: 10
+    maximum_ratio: 1.00
+    maximum_points: 15
+
+  opening_evidence:
+    weight: 10
+    all_opening_trades_points: 10
+    volume_oi_ratio_2_points: 5
+    volume_oi_ratio_1_points: 3
+    below_1_points: 0
+
+  risk_reversal:
+    weight: 10
+    enabled: false
+    default_status: "UNKNOWN"
+
+  market_structure:
+
+    target_expiry_gex_alignment:
+      weight: 5
+      enabled: false
+      default_status: "UNKNOWN"
+
+    negative_gamma_regime:
+      weight: 5
+      enabled: true
+      condition: "total_gex < 0"
+
+    off_exchange_cluster_score:
+      weight: 5
+      enabled: false
+      default_status: "UNKNOWN"
+
+  directional_flow_confirmation:
+    weight: 10
+    strong_threshold: 0.25
+    strong_points: 10
+    weak_points: 5
+    conflict_points: 0
+
+volatility_penalty:
+  iv_percentile:
+    weight: 5
+    penalty: 5
+    enabled: true
+
+  term_structure:
+    weight: 5
+    penalty: 5
+    enabled: false
+
+  iv_vs_rv:
+    weight: 5
+    penalty: 5
+    enabled: false
+
+  maximum_penalty: 15
+
+coverage:
+  total_availability_weight: 115
+  coverage_a_min: 0.75
+  coverage_b_min: 0.60
+  coverage_minimum_for_rating: 0.60
+
+grades:
+  grade_a_min_score: 80
+  grade_b_min_score: 65
+
+directional_flow:
+  directional_strength_threshold: 0.25
+
+off_exchange:
+  off_exchange_scoring_enabled: false
+  off_exchange_cluster_notional_min: 1000000
+
+outcomes:
+  outcome_option_return_mode: "executable_bid_vs_baseline_ask"
+
+  checkpoint_minutes:
+    - 15
+    - 30
+    - 60
+
+  checkpoint_named:
+    - "EOD"
+    - "NEXT_SESSION_CLOSE"
+    - "EXPIRY"
+
+database:
+  path: "weekly_trading.db"
+  journal_mode: "WAL"
+  busy_timeout_ms: 5000
+  foreign_keys: true

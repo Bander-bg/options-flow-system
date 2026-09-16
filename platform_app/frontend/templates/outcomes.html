@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>النتائج</title>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar">
+        <div class="brand">BG</div>
+        <nav>
+            <a class="nav-link" href="/">لوحة التحكم</a>
+            <a class="nav-link" href="/universe">إدارة الأسهم</a>
+            <a class="nav-link" href="/signals">الإشارات</a>
+        <a class="nav-link" href="/alerts">التنبيهات</a>
+            <a class="nav-link" href="/positions">المراكز</a>
+            <a class="nav-link" href="/trades">الصفقات</a>
+        <a class="nav-link" href="/paper-trading">التداول الورقي</a>
+            <a class="nav-link active" href="/outcomes">النتائج</a>
+            <a class="nav-link" href="/data-health">صحة البيانات</a>
+            <a class="nav-link" href="/settings">الإعدادات</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+
+        <header class="page-header">
+            <div>
+                <h1 class="page-title">النتائج</h1>
+                <div class="subtitle">نتائج تجريبية فقط · لا تمثل Outcome baseline الحقيقي للنظام حتى يتم اعتماده</div>
+            </div>
+            <div class="status-pill">ENGINE DB</div>
+        </header>
+
+        <section class="stats">
+            <div class="stat-card">
+                <div class="stat-label">إجمالي النتائج</div>
+                <div class="stat-value">{{ outcomes|length }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Observed</div>
+                <div class="stat-value positive">
+                    {{ outcomes | selectattr("status", "equalto", "OBSERVED") | list | length }}
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">متوسط Option Return</div>
+                <div class="stat-value {% if avg_option_return is not none %}{{ 'positive' if avg_option_return >= 0 else 'negative' }}{% endif %}">
+                    {% if avg_option_return is not none %}{{ "{:.1f}".format(avg_option_return) }}%{% else %}—{% endif %}
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">متوسط Directional Return</div>
+                <div class="stat-value {% if avg_directional_return is not none %}{{ 'positive' if avg_directional_return >= 0 else 'negative' }}{% endif %}">
+                    {% if avg_directional_return is not none %}{{ "{:.1f}".format(avg_directional_return) }}%{% else %}—{% endif %}
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">سجل النتائج التجريبية</h2>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>السهم</th>
+                        <th>Scope</th>
+                        <th>Checkpoint</th>
+                        <th>Underlying Return</th>
+                        <th>Directional Return</th>
+                        <th>Executable Option Return</th>
+                        <th>Mark Return</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for outcome in outcomes %}
+                    <tr>
+                        <td class="ticker">{{ outcome.ticker }}</td>
+                        <td>{{ outcome.scope }}</td>
+                        <td>{{ outcome.checkpoint }}</td>
+
+                        <td class="{% if outcome.underlying_return_pct is not none %}{{ 'positive' if outcome.underlying_return_pct >= 0 else 'negative' }}{% endif %}">
+                            {% if outcome.underlying_return_pct is not none %}{{ "{:.1f}".format(outcome.underlying_return_pct) }}%{% else %}—{% endif %}
+                        </td>
+
+                        <td class="{% if outcome.directional_return_pct is not none %}{{ 'positive' if outcome.directional_return_pct >= 0 else 'negative' }}{% endif %}">
+                            {% if outcome.directional_return_pct is not none %}{{ "{:.1f}".format(outcome.directional_return_pct) }}%{% else %}—{% endif %}
+                        </td>
+
+                        <td class="{% if outcome.option_executable_return_pct is not none %}{{ 'positive' if outcome.option_executable_return_pct >= 0 else 'negative' }}{% endif %}">
+                            {% if outcome.option_executable_return_pct is not none %}{{ "{:.1f}".format(outcome.option_executable_return_pct) }}%{% else %}—{% endif %}
+                        </td>
+
+                        <td class="{% if outcome.option_mark_return_pct is not none %}{{ 'positive' if outcome.option_mark_return_pct >= 0 else 'negative' }}{% endif %}">
+                            {% if outcome.option_mark_return_pct is not none %}{{ "{:.1f}".format(outcome.option_mark_return_pct) }}%{% else %}—{% endif %}
+                        </td>
+
+                        <td>
+                            <span class="badge positive">{{ outcome.status }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+</div>
+</body>
+</html>
+
+
+
+

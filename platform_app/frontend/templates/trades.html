@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الصفقات</title>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar">
+        <div class="brand">BG</div>
+        <nav>
+            <a class="nav-link" href="/">لوحة التحكم</a>
+            <a class="nav-link" href="/universe">إدارة الأسهم</a>
+            <a class="nav-link" href="/signals">الإشارات</a>
+        <a class="nav-link" href="/alerts">التنبيهات</a>
+            <a class="nav-link" href="/positions">المراكز</a>
+            <a class="nav-link active" href="/trades">الصفقات</a>
+        <a class="nav-link" href="/paper-trading">التداول الورقي</a>
+            <a class="nav-link" href="/outcomes">النتائج</a>
+            <a class="nav-link" href="/data-health">صحة البيانات</a>
+            <a class="nav-link" href="/settings">الإعدادات</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+
+        <header class="page-header">
+            <div>
+                <h1 class="page-title">الصفقات</h1>
+                <div class="subtitle">سجل عمليات التداول التجريبية</div>
+            </div>
+            <div class="status-pill">ENGINE DB · PAPER</div>
+        </header>
+
+        <section class="stats">
+            <div class="stat-card">
+                <div class="stat-label">إجمالي الصفقات</div>
+                <div class="stat-value">{{ trades|length }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">تم تنفيذها</div>
+                <div class="stat-value positive">
+                    {{ trades | selectattr("status", "equalto", "FILLED") | list | length }}
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">شراء</div>
+                <div class="stat-value">
+                    {{ trades | selectattr("side", "equalto", "BUY") | list | length }}
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">بيع</div>
+                <div class="stat-value">
+                    {{ trades | selectattr("side", "equalto", "SELL") | list | length }}
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">سجل الصفقات</h2>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>رقم الصفقة</th>
+                        <th>السهم</th>
+                        <th>العقد</th>
+                        <th>العملية</th>
+                        <th>الكمية</th>
+                        <th>الحالة</th>
+                        <th>سعر التنفيذ</th>
+                        <th>وقت الطلب</th>
+                        <th>وقت التنفيذ</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for trade in trades %}
+                    <tr>
+                        <td>#{{ trade.trade_id }}</td>
+                        <td class="ticker">{{ trade.ticker }}</td>
+                        <td>{{ trade.contract_symbol }}</td>
+
+                        <td class="{{ 'positive' if trade.side == 'BUY' else 'negative' }}">
+                            {{ "شراء" if trade.side == "BUY" else "بيع" }}
+                        </td>
+
+                        <td>{{ trade.quantity }}</td>
+
+                        <td>
+                            <span class="badge positive">{{ trade.status }}</span>
+                        </td>
+
+                        <td>
+                            {% if trade.fill_price is not none %}${{ "{:,.2f}".format(trade.fill_price) }}{% else %}—{% endif %}
+                        </td>
+
+                        <td>{{ trade.requested_at }}</td>
+                        <td>{{ trade.filled_at if trade.filled_at else "-" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+</div>
+</body>
+</html>
+
+
+
+
+

@@ -1,0 +1,51 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python environments
+.venv/
+venv/
+env/
+platform_app/.venv/
+
+# Python cache / test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+*.sqlite-wal
+*.sqlite-shm
+
+# Local Demo runtime
+platform_app/demo/
+
+# Logs / runtime files
+*.log
+*.pid
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+~$*
+
+# Local Demo server
+platform_app/backend/demo_server.py

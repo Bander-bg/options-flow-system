@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تفاصيل إشارة {{ signal.ticker }}</title>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar">
+        <div class="brand">BG</div>
+        <nav>
+            <a class="nav-link" href="/">لوحة التحكم</a>
+            <a class="nav-link" href="/universe">إدارة الأسهم</a>
+            <a class="nav-link active" href="/signals">الإشارات</a>
+        <a class="nav-link" href="/alerts">التنبيهات</a>
+            <a class="nav-link" href="/positions">المراكز</a>
+            <a class="nav-link" href="/trades">الصفقات</a>
+        <a class="nav-link" href="/paper-trading">التداول الورقي</a>
+            <a class="nav-link" href="/outcomes">النتائج</a>
+            <a class="nav-link" href="/data-health">صحة البيانات</a>
+            <a class="nav-link" href="/settings">الإعدادات</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+
+        <header class="page-header">
+            <div>
+                <h1 class="page-title">{{ signal.ticker }}</h1>
+                <div class="subtitle">تفاصيل الإشارة الأسبوعية</div>
+            </div>
+
+            <div>
+                <span class="badge state-{{ signal.state|lower|replace('_','-') }}">
+                    {{ signal.state|state_ar }}
+                </span>
+            </div>
+        </header>
+
+        <section class="stats">
+            <div class="stat-card">
+                <div class="stat-label">الاتجاه</div>
+                <div class="stat-value {{ signal.direction|lower }}">
+                    {{ "صاعد" if signal.direction == "BULLISH" else "هابط" }}
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Quality Score</div>
+                <div class="stat-value">
+                    {% if signal.quality_score is not none %}{{ signal.quality_score }}{% else %}?{% endif %}
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">التقييم</div>
+                <div class="stat-value">{{ signal.quality_grade }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Net Flow</div>
+                <div class="stat-value {% if signal.net_flow is not none %}{{ 'positive' if signal.net_flow > 0 else 'negative' }}{% endif %}">
+                    {% if signal.net_flow is not none %}${{ "{:,.0f}".format(signal.net_flow) }}{% else %}?{% endif %}
+                </div>
+            </div>
+        </section>
+
+        <section class="panel signal-detail-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">معلومات الإشارة</h2>
+            </div>
+
+            <table>
+                <tbody>
+                    <tr>
+                        <th>السهم</th>
+                        <td>{{ signal.ticker }}</td>
+                    </tr>
+                    <tr>
+                        <th>الحالة</th>
+                        <td>{{ signal.state|state_ar }}</td>
+                    </tr>
+                    <tr>
+                        <th>الاتجاه</th>
+                        <td>{{ signal.direction }}</td>
+                    </tr>
+                    <tr>
+                        <th>تاريخ الانتهاء</th>
+                        <td>{{ signal.target_expiry }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        {% if signal.flow %}
+        <section class="panel signal-detail-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">تحليل التدفق</h2>
+            </div>
+
+            <table>
+                <tbody>
+                    <tr>
+                        <th>Call Ask Premium</th>
+                        <td>{% if signal.flow.call_ask_premium is not none %}${{ "{:,.0f}".format(signal.flow.call_ask_premium) }}{% else %}?{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th>Put Ask Premium</th>
+                        <td>{% if signal.flow.put_ask_premium is not none %}${{ "{:,.0f}".format(signal.flow.put_ask_premium) }}{% else %}?{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th>Bullish Premium</th>
+                        <td class="positive">{% if signal.flow.bullish_premium is not none %}${{ "{:,.0f}".format(signal.flow.bullish_premium) }}{% else %}?{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th>Bearish Premium</th>
+                        <td class="negative">{% if signal.flow.bearish_premium is not none %}${{ "{:,.0f}".format(signal.flow.bearish_premium) }}{% else %}?{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th>Flow Strength</th>
+                        <td>{% if signal.flow.strength is not none %}{{ signal.flow.strength }}{% else %}?{% endif %}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+
+        {% if signal.price_action %}
+        <section class="panel signal-detail-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Price Action</h2>
+            </div>
+
+            <table>
+                <tbody>
+                    <tr><th>Structure</th><td>{{ signal.price_action.structure }}</td></tr>
+                    <tr><th>Impulse</th><td>{{ signal.price_action.impulse }}</td></tr>
+                    <tr><th>Participation</th><td>{{ signal.price_action.participation }}</td></tr>
+                    <tr><th>النتيجة النهائية</th><td>{{ signal.price_action.final }}</td></tr>
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+
+        {% if signal.market_regime %}
+        <section class="panel signal-detail-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Market Regime</h2>
+            </div>
+
+            <table>
+                <tbody>
+                    <tr><th>Weekly VWAP</th><td>{% if signal.market_regime.weekly_vwap is not none %}{{ signal.market_regime.weekly_vwap }}{% else %}?{% endif %}</td></tr>
+                    <tr><th>Efficiency Ratio</th><td>{% if signal.market_regime.efficiency_ratio is not none %}{{ signal.market_regime.efficiency_ratio }}{% else %}?{% endif %}</td></tr>
+                    <tr><th>ATR</th><td>{% if signal.market_regime.atr is not none %}{{ signal.market_regime.atr }}{% else %}?{% endif %}</td></tr>
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+
+        {% if signal.contract %}
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">العقد المختار</h2>
+            </div>
+
+            <table>
+                <tbody>
+                    <tr><th>العقد</th><td>{{ signal.contract.symbol }}</td></tr>
+                    <tr><th>النوع</th><td>{{ signal.contract.right }}</td></tr>
+                    <tr><th>Strike</th><td>{% if signal.contract.strike is not none %}{{ signal.contract.strike }}{% else %}?{% endif %}</td></tr>
+                    <tr><th>Delta</th><td>{% if signal.contract.delta is not none %}{{ signal.contract.delta }}{% else %}?{% endif %}</td></tr>
+                    <tr><th>Spread</th><td>{% if signal.contract.spread_pct is not none %}{{ (signal.contract.spread_pct * 100)|round(1) }}%{% else %}?{% endif %}</td></tr>
+                    <tr><th>التكلفة التقديرية</th><td>{% if signal.contract.estimated_cost is not none %}${{ "{:,.0f}".format(signal.contract.estimated_cost) }}{% else %}?{% endif %}</td></tr>
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+
+    </main>
+</div>
+</body>
+</html>
+
+
+
+

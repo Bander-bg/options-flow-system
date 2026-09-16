@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الأسهم</title>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar">
+        <div class="brand">BG</div>
+        <nav>
+            <a class="nav-link" href="/">لوحة التحكم</a>
+            <a class="nav-link active" href="/universe">إدارة الأسهم</a>
+            <a class="nav-link" href="/signals">الإشارات</a>
+        <a class="nav-link" href="/alerts">التنبيهات</a>
+            <a class="nav-link" href="/positions">المراكز</a>
+            <a class="nav-link" href="/trades">الصفقات</a>
+        <a class="nav-link" href="/paper-trading">التداول الورقي</a>
+            <a class="nav-link" href="/outcomes">النتائج</a>
+            <a class="nav-link" href="/data-health">صحة البيانات</a>
+            <a class="nav-link" href="/settings">الإعدادات</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+
+        <header class="page-header">
+            <div>
+                <h1 class="page-title">إدارة الأسهم</h1>
+                <div class="subtitle">قائمة الأسهم المعتمدة حاليًا في إعدادات المحرك</div>
+            </div>
+            <div class="status-pill">ENGINE CONFIG · قابل للإدارة</div>
+        </header>
+
+        {% if notice %}
+        <div
+            id="universe-notice"
+            class="universe-notice {% if notice == 'error' %}universe-notice-error{% else %}universe-notice-success{% endif %}"
+        >
+            {% if notice == "added" %}
+                تمت إضافة السهم
+                <strong>{{ notice_ticker }}</strong>
+                بنجاح.
+            {% elif notice == "deleted" %}
+                تم حذف السهم
+                <strong>{{ notice_ticker }}</strong>
+                بنجاح.
+            {% elif notice_reason == "duplicate" %}
+                السهم موجود مسبقًا في القائمة.
+            {% elif notice_reason == "invalid" %}
+                رمز السهم غير صحيح.
+            {% elif notice_reason == "last" %}
+                لا يمكن حذف آخر سهم من الـ Universe.
+            {% elif notice_reason == "not_found" %}
+                السهم غير موجود في القائمة.
+            {% else %}
+                تعذر تنفيذ العملية.
+            {% endif %}
+        </div>
+        {% endif %}
+
+
+        <section class="panel universe-management-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">إدارة قائمة الأسهم</h2>
+                <span class="status-pill">
+                    ENGINE CONFIG
+                </span>
+            </div>
+
+            <div class="universe-management-grid">
+
+                <div class="universe-management-block">
+                    <div class="universe-management-label">
+                        إضافة سهم
+                    </div>
+
+                    <div class="subtitle">
+                        أضف رمز سهم جديد إلى الـ Universe الذي يقرؤه المحرك.
+                    </div>
+
+                    <form
+                        id="universe-add-form"
+                        class="universe-add-form"
+                        method="post"
+                        action="/universe/add"
+                    >
+                        <input
+                            id="universe-add-input"
+                            class="universe-control-input"
+                            type="text"
+                            name="ticker"
+                            required
+                            maxlength="15"
+                            pattern="[A-Za-z][A-Za-z0-9.\-]{0,14}"
+                            autocomplete="off"
+                            spellcheck="false"
+                            placeholder="مثال: MSFT"
+                        >
+
+                        <button
+                            class="universe-add-button"
+                            type="submit"
+                        >
+                            + إضافة
+                        </button>
+                    </form>
+                </div>
+
+                <div class="universe-management-block">
+                    <div class="universe-management-label">
+                        البحث
+                    </div>
+
+                    <div class="subtitle">
+                        ابحث عن سهم موجود في القائمة.
+                    </div>
+
+                    <div class="universe-search-row">
+                        <input
+                            id="universe-search"
+                            class="universe-control-input"
+                            type="search"
+                            autocomplete="off"
+                            spellcheck="false"
+                            placeholder="ابح برمز السهم..."
+                        >
+
+                        <span
+                            id="universe-search-count"
+                            class="status-pill universe-search-count"
+                        >
+                            {{ total_count }}
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">قائمة الأسهم</h2>
+                <span class="status-pill">
+                    الإجمالي: {{ total_count }}
+                </span>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>السهم</th>
+                        <th>الحالة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in universe %}
+                    <tr data-ticker="{{ item.ticker|upper }}">
+                        <td class="ticker">
+                            {{ item.ticker }}
+                        </td>
+
+                        <td>
+                            <span class="badge positive">
+                                مدرج في إعدادات المحرك
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="universe-row-actions">
+                                <span class="badge">
+                                    نشط
+                                </span>
+
+                                <form
+                                    class="universe-delete-form"
+                                    method="post"
+                                    action="/universe/{{ item.ticker }}/delete"
+                                    data-ticker="{{ item.ticker }}"
+                                >
+                                    <button
+                                        type="submit"
+                                        class="universe-delete-button"
+                                    >
+                                        حذف
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                    <tr id="universe-no-results" hidden>
+                        <td
+                            colspan="3"
+                            class="universe-no-results"
+                        >
+                            لا يوجد سهم مطابق للبحث.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+</div>
+
+<script>
+(() => {
+    const universeSearch =
+        document.getElementById("universe-search");
+
+    const addForm =
+        document.getElementById("universe-add-form");
+
+    const addInput =
+        document.getElementById("universe-add-input");
+
+    const count =
+        document.getElementById("universe-search-count");
+
+    const noResults =
+        document.getElementById("universe-no-results");
+
+    const rows = Array.from(
+        document.querySelectorAll("tr[data-ticker]")
+    );
+
+    const existingTickers = new Set(
+        rows.map(
+            (row) => (row.dataset.ticker || "").toUpperCase()
+        )
+    );
+
+    const applySearch = () => {
+        if (!universeSearch) {
+            return;
+        }
+
+        const query = universeSearch.value
+            .trim()
+            .toUpperCase();
+
+        let visible = 0;
+
+        rows.forEach((row) => {
+            const ticker =
+                (row.dataset.ticker || "").toUpperCase();
+
+            const matches =
+                !query || ticker.includes(query);
+
+            row.hidden = !matches;
+
+            if (matches) {
+                visible += 1;
+            }
+        });
+
+        if (count) {
+            count.textContent = String(visible);
+        }
+
+        if (noResults) {
+            noResults.hidden = visible !== 0;
+        }
+    };
+
+    if (universeSearch) {
+        universeSearch.addEventListener(
+            "input",
+            applySearch
+        );
+    }
+
+    if (addInput) {
+        addInput.addEventListener(
+            "input",
+            () => {
+                addInput.value =
+                    addInput.value.toUpperCase();
+
+                addInput.setCustomValidity("");
+            }
+        );
+    }
+
+    if (addForm && addInput) {
+        addForm.addEventListener(
+            "submit",
+            (event) => {
+                const ticker =
+                    addInput.value.trim().toUpperCase();
+
+                addInput.value = ticker;
+
+                if (existingTickers.has(ticker)) {
+                    event.preventDefault();
+
+                    addInput.setCustomValidity(
+                        "\u0647\u0630\u0627 \u0627\u0644\u0633\u0647\u0645 \u0645\u0648\u062c\u0648\u062f \u0645\u0633\u0628\u0642\u064b\u0627."
+                    );
+
+                    addInput.reportValidity();
+                    return;
+                }
+
+                addInput.setCustomValidity("");
+            }
+        );
+    }
+
+    document
+        .querySelectorAll(".universe-delete-form")
+        .forEach((form) => {
+            form.addEventListener(
+                "submit",
+                (event) => {
+                    const ticker =
+                        form.dataset.ticker || "";
+
+                    const accepted = window.confirm(
+                        "\u0647\u0644 \u0623\u0646\u062a \u0645\u062a\u0623\u0643\u062f \u0645\u0646 \u062d\u0630\u0641 \u0627\u0644\u0633\u0647\u0645" + " " + ticker + "?"
+                    );
+
+                    if (!accepted) {
+                        event.preventDefault();
+                    }
+                }
+            );
+        });
+})();
+</script>
+</body>
+</html>
+
+
+
+

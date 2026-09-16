@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الإشارات</title>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar">
+        <div class="brand">BG</div>
+        <nav>
+            <a class="nav-link" href="/">لوحة التحكم</a>
+            <a class="nav-link" href="/universe">إدارة الأسهم</a>
+            <a class="nav-link active" href="/signals">الإشارات</a>
+        <a class="nav-link" href="/alerts">التنبيهات</a>
+            <a class="nav-link" href="/positions">المراكز</a>
+            <a class="nav-link" href="/trades">الصفقات</a>
+        <a class="nav-link" href="/paper-trading">التداول الورقي</a>
+            <a class="nav-link" href="/outcomes">النتائج</a>
+            <a class="nav-link" href="/data-health">صحة البيانات</a>
+            <a class="nav-link" href="/settings">الإعدادات</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+
+        <header class="page-header">
+            <div>
+                <h1 class="page-title">الإشارات</h1>
+                <div class="subtitle">متابعة جميع إشارات الاستراتيجية وحالاتها الحالية</div>
+            </div>
+            <div class="status-pill">المصدر: ENGINE</div>
+        </header>
+
+        <section class="stats">
+            <div class="stat-card">
+                <div class="stat-label">إجمالي الإشارات</div>
+                <div class="stat-value">{{ signals|length }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">مؤكدة</div>
+                <div class="stat-value positive">
+                    {{ signals | selectattr("state", "equalto", "CONFIRMED") | list | length }}
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">نشطة</div>
+                <div class="stat-value positive">
+                    {{ signals | selectattr("state", "equalto", "ACTIVE") | list | length }}
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">مرفوضة</div>
+                <div class="stat-value negative">
+                    {{ signals | selectattr("state", "equalto", "REJECTED") | list | length }}
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">جميع الإشارات</h2>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>السهم</th>
+                        <th>الاتجاه</th>
+                        <th>الحالة</th>
+                        <th>التقييم</th>
+                        <th>Quality Score</th>
+                        <th>Net Flow</th>
+                        <th>العقد</th>
+                        <th>الانتهاء</th>
+                        <th>التفاصيل</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for signal in signals %}
+                    <tr>
+                        <td class="ticker">{{ signal.ticker }}</td>
+
+                        <td class="{{ signal.direction|lower }}">
+                            {{ "صاعد" if signal.direction == "BULLISH" else "هابط" }}
+                        </td>
+
+                        <td>
+                            <span class="badge state-{{ signal.state|lower|replace('_','-') }}">
+                                {{ signal.state|state_ar }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="badge grade-{{ signal.quality_grade|lower }}">
+                                {{ signal.quality_grade }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {{ signal.quality_score if signal.quality_score is not none else "?" }}
+                        </td>
+
+                        <td class="{% if signal.net_flow is not none %}{{ 'positive' if signal.net_flow > 0 else 'negative' }}{% endif %}">
+                            {% if signal.net_flow is not none %}${{ "{:,.0f}".format(signal.net_flow) }}{% else %}?{% endif %}
+                        </td>
+
+                        <td>{{ signal.contract_right if signal.contract_right is defined else "—" }} / {{ signal.strike if signal.strike is defined else "—" }} / {{ ("$" ~ "{:,.0f}".format(signal.contract_amount)) if signal.contract_amount is defined else "—" }}</td>
+                        <td>{{ signal.target_expiry }}</td>
+
+                        <td>
+                            <a href="/signals/{{ signal.ticker }}">عرض</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+</div>
+</body>
+</html>
+
+
+
+
+
+
+

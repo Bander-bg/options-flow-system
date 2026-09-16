@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة تدفق الأوبشن</title>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar">
+        <div class="brand">BG</div>
+
+        <nav>
+            <a class="nav-link active" href="/">لوحة التحكم</a>`r`n            <a class="nav-link" href="/universe">إدارة الأسهم</a>
+            <a class="nav-link" href="/signals">الإشارات</a>
+        <a class="nav-link" href="/alerts">التنبيهات</a>
+            <a class="nav-link" href="/positions">المراكز</a>
+            <a class="nav-link" href="/trades">الصفقات</a>
+        <a class="nav-link" href="/paper-trading">التداول الورقي</a>
+            <a class="nav-link" href="/outcomes">النتائج</a>
+            <a class="nav-link" href="/data-health">صحة البيانات</a>
+            <a class="nav-link" href="/settings">الإعدادات</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+
+        <header class="page-header">
+            <div>
+                <h1 class="page-title">إشارات تدفق الأوبشن الأسبوعية</h1>
+                <div class="subtitle">بيانات المحرك · قراءة فقط</div>
+            </div>
+
+            <div class="status-pill">
+                المحرك: غير متصل · الوسيط: غير متصل
+            </div>
+        </header>
+
+        <section class="stats">
+            <div class="stat-card">
+                <div class="stat-label">الأسهم المتابعة</div>
+                <div class="stat-value">{{ signals|length }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">مؤكدة / نشطة</div>
+                <div class="stat-value">
+                    {{ signals | selectattr("state", "in", ["CONFIRMED", "ACTIVE"]) | list | length }}
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">صاعدة</div>
+                <div class="stat-value positive">
+                    {{ signals | selectattr("direction", "equalto", "BULLISH") | list | length }}
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">هابطة</div>
+                <div class="stat-value negative">
+                    {{ signals | selectattr("direction", "equalto", "BEARISH") | list | length }}
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">الإشارات الأسبوعية</h2>
+                <span class="status-pill">المصدر: ENGINE</span>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>السهم</th>
+                        <th>الاتجاه</th>
+                        <th>الحالة</th>
+                        <th>التقييم</th>
+                        <th>الدرجة</th>
+                        <th>صافي التدفق</th>
+                        <th>تاريخ الانتهاء</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for signal in signals %}
+                    <tr>
+                        <td class="ticker">{{ signal.ticker }}</td>
+
+                        <td class="{{ signal.direction|lower }}">
+                            {{ "صاعد" if signal.direction == "BULLISH" else "هابط" }}
+                        </td>
+
+                        <td>
+                            <span class="badge state-{{ signal.state|lower|replace('_','-') }}">
+                                {{ signal.state|state_ar }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="badge grade-{{ signal.quality_grade|lower }}">
+                                {{ signal.quality_grade }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {% if signal.quality_score is not none %}{{ signal.quality_score }}{% else %}—{% endif %}
+                        </td>
+
+                        <td class="{% if signal.net_flow is not none %}{{ 'positive' if signal.net_flow > 0 else 'negative' }}{% endif %}">
+                            {% if signal.net_flow is not none %}${{ "{:,.0f}".format(signal.net_flow) }}{% else %}—{% endif %}
+                        </td>
+
+                        <td>{{ signal.target_expiry }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+</div>
+</body>
+</html>
+
+
+
+
+

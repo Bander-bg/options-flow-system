@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المراكز</title>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar">
+        <div class="brand">BG</div>
+        <nav>
+            <a class="nav-link" href="/">لوحة التحكم</a>
+            <a class="nav-link" href="/universe">إدارة الأسهم</a>
+            <a class="nav-link" href="/signals">الإشارات</a>
+        <a class="nav-link" href="/alerts">التنبيهات</a>
+            <a class="nav-link active" href="/positions">المراكز</a>
+            <a class="nav-link" href="/trades">الصفقات</a>
+        <a class="nav-link" href="/paper-trading">التداول الورقي</a>
+            <a class="nav-link" href="/outcomes">النتائج</a>
+            <a class="nav-link" href="/data-health">صحة البيانات</a>
+            <a class="nav-link" href="/settings">الإعدادات</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+
+        <header class="page-header">
+            <div>
+                <h1 class="page-title">المراكز المفتوحة</h1>
+                <div class="subtitle">عرض المراكز التجريبية الحالية بدون ربط بالوسيط</div>
+            </div>
+            <div class="status-pill">ENGINE DB · PAPER</div>
+        </header>
+
+        <section class="stats">
+            <div class="stat-card">
+                <div class="stat-label">عدد المراكز</div>
+                <div class="stat-value">{{ positions|length }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">إجمالي القيمة عند الدخول</div>
+                <div class="stat-value">
+                    ${{ "{:,.2f}".format(total_entry_value) }}
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">القيمة الحالية</div>
+                <div class="stat-value">
+                    {% if total_current_value is not none %}${{ "{:,.2f}".format(total_current_value) }}{% else %}—{% endif %}
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">الربح / الخسارة</div>
+                <div class="stat-value {% if total_pnl is not none %}{{ 'positive' if total_pnl >= 0 else 'negative' }}{% endif %}">
+                    {% if total_pnl is not none %}${{ "{:,.2f}".format(total_pnl) }}{% else %}—{% endif %}
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">المراكز الحالية</h2>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>السهم</th>
+                        <th>العقد</th>
+                        <th>الاتجاه</th>
+                        <th>الكمية</th>
+                        <th>سعر الدخول</th>
+                        <th>السعر الحالي</th>
+                        <th>الربح / الخسارة</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for position in positions %}
+                    {% set pnl = ((position.current_price - position.entry_price) * 100 * position.quantity) if position.current_price is not none and position.entry_price is not none else none %}
+                    <tr>
+                        <td class="ticker">{{ position.ticker }}</td>
+                        <td>{{ position.contract_symbol }}</td>
+                        <td class="{{ position.direction|lower }}">
+                            {{ "صاعد" if position.direction == "BULLISH" else "هابط" }}
+                        </td>
+                        <td>{{ position.quantity }}</td>
+                        <td>{% if position.entry_price is not none %}${{ "{:,.2f}".format(position.entry_price) }}{% else %}—{% endif %}</td>
+                        <td>{% if position.current_price is not none %}${{ "{:,.2f}".format(position.current_price) }}{% else %}—{% endif %}</td>
+                        <td class="{% if pnl is not none %}{{ 'positive' if pnl >= 0 else 'negative' }}{% endif %}">
+                            {% if pnl is not none %}${{ "{:,.2f}".format(pnl) }}{% else %}—{% endif %}
+                        </td>
+                        <td>
+                            <span class="badge positive">{{ position.status }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+</div>
+</body>
+</html>
+
+
+
+

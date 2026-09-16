@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مركز التنبيهات</title>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="brand">BG</div>
+        <a class="nav-link" href="/">لوحة التحكم</a>
+        <a class="nav-link" href="/universe">إدارة الأسهم</a>
+        <a class="nav-link" href="/signals">الإشارات</a>
+        <a class="nav-link active" href="/alerts">التنبيهات</a>
+        <a class="nav-link" href="/positions">المراكز</a>
+        <a class="nav-link" href="/trades">الصفقات</a>
+        <a class="nav-link" href="/paper-trading">التداول الورقي</a>
+        <a class="nav-link" href="/outcomes">النتائج</a>
+        <a class="nav-link" href="/data-health">صحة البيانات</a>
+        <a class="nav-link" href="/settings">الإعدادات</a>
+    </aside>
+
+    <main class="content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">مركز التنبيهات</h1>
+                <div class="subtitle">لا يوجد حاليًا مصدر تنبيهات فعلي مربوط</div>
+            </div>
+            <span class="status-pill">مصدر التنبيهات: غير مربوط</span>
+        </div>
+
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">التنبيهات الحالية</h2>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>الحالة</th>
+                        <th>السهم</th>
+                        <th>الاتجاه</th>
+                        <th>العقد</th>
+                        <th>الجودة</th>
+                        <th>الرسالة</th>
+                        <th>القراءة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for alert in alerts %}
+                    <tr>
+                        <td><span class="badge state-{{ alert.state|lower }}">{{ alert.state|state_ar }}</span></td>
+                        <td class="ticker">{{ alert.ticker }}</td>
+                        <td class="{{ 'bullish' if alert.direction == 'BULLISH' else 'bearish' }}">{{ alert.direction }}</td>
+                        <td>{{ alert.contract }}</td>
+                        <td>{{ alert.quality }}</td>
+                        <td>{{ alert.message }}</td>
+                        <td>{% if alert.status == "NEW" %}<form method="post" action="/alerts/{{ alert.alert_id }}/read"><button type="submit">تعليم كمقروء</button></form>{% else %}<span class="badge">مقروء</span>{% endif %}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7">لا توجد تنبيهات حقيقية متاحة حاليًا</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </main>
+</div>
+</body>
+</html>
+
