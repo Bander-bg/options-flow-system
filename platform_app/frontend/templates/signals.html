@@ -27,6 +27,14 @@
 
     <main class="content">
 
+{% if review_demo_enabled() %}
+<div class="review-demo-banner" role="status">
+  <strong>وضع العرض</strong>
+  <span>بيانات تجريبية وليست بيانات سوق حقيقية</span>
+</div>
+{% endif %}
+
+
         <header class="page-header">
             <div>
                 <h1 class="page-title">الإشارات</h1>

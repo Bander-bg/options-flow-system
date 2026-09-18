@@ -774,3 +774,37 @@ a {
     }
 }
 
+
+
+/* Review Demo Mode */
+.review-demo-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    margin: 0 0 18px;
+    padding: 10px 16px;
+    border: 1px solid rgba(212, 175, 55, 0.55);
+    border-radius: 10px;
+    background: rgba(212, 175, 55, 0.08);
+    font-size: 13px;
+    text-align: center;
+}
+
+.review-demo-banner strong {
+    white-space: nowrap;
+    color: #d4af37;
+}
+
+.review-demo-banner span {
+    color: var(--text-muted, #aeb8c5);
+}
+
+@media (max-width: 640px) {
+    .review-demo-banner {
+        flex-direction: column;
+        gap: 3px;
+        padding: 9px 12px;
+    }
+}

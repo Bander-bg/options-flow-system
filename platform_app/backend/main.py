@@ -20,6 +20,13 @@ from platform_app.backend.paper_execution_bridge import (
 )
 
 from weekly.db.migration_runner import run_migrations
+from platform_app.backend.review_demo import (
+    initialize_review_demo,
+    review_demo_enabled,
+    ReviewDemoOptionsProvider,
+    load_review_demo_alerts,
+    mark_review_demo_alert_read,
+)
 
 from platform_app.backend.engine_config_writer import (
     UniverseConfigWriteError,
@@ -31,6 +38,7 @@ from platform_app.backend.engine_config_writer import (
 async def lifespan(app: FastAPI):
     if os.getenv("OPTIONS_FLOW_DB_PATH"):
         run_migrations()
+        initialize_review_demo()
 
     yield
 
@@ -50,6 +58,8 @@ TEMPLATES_DIR = BASE_DIR / "frontend" / "templates"
 STATIC_DIR = BASE_DIR / "frontend" / "static"
 
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+
+templates.env.globals["review_demo_enabled"] = review_demo_enabled
 
 # === SIGNAL STATE ARABIC UI ===
 
@@ -548,11 +558,14 @@ def paper_trading_page(request: Request):
     )
 
     if has_filled_position:
-        try:
-            providers = build_weekly_providers()
-            options_provider = providers.options
-        except Exception:
-            options_provider = None
+        if review_demo_enabled():
+            options_provider = ReviewDemoOptionsProvider()
+        else:
+            try:
+                providers = build_weekly_providers()
+                options_provider = providers.options
+            except Exception:
+                options_provider = None
 
     positions_with_pnl = [
         enrich_position_with_live_pnl(
@@ -575,7 +588,11 @@ def paper_trading_page(request: Request):
             "signals": confirmed_signals,
             "positions": positions_with_pnl,
             "trades": paper_trades,
-            "data_source": "ENGINE DB",
+            "data_source": (
+                "REVIEW_DEMO"
+                if review_demo_enabled()
+                else "ENGINE DB"
+            ),
         },
     )
 
@@ -646,18 +663,41 @@ def paper_prepare_exit(
 
 @app.get("/alerts", response_class=HTMLResponse)
 def alerts_page(request: Request):
+    if review_demo_enabled():
+        alerts = load_review_demo_alerts()
+        data_source = "REVIEW_DEMO"
+    else:
+        alerts = []
+        data_source = "NO_REAL_ALERT_SOURCE"
+
     return templates.TemplateResponse(
         request=request,
         name="alerts.html",
         context={
-            "alerts": [],
-            "data_source": "NO_REAL_ALERT_SOURCE",
+            "alerts": alerts,
+            "data_source": data_source,
         },
     )
 
 
 @app.post("/alerts/{alert_id}/read")
 def mark_alert_read(alert_id: str):
+    if review_demo_enabled():
+        try:
+            mark_review_demo_alert_read(
+                alert_id
+            )
+        except RuntimeError as exc:
+            raise HTTPException(
+                status_code=404,
+                detail=str(exc),
+            ) from exc
+
+        return RedirectResponse(
+            url="/alerts",
+            status_code=303,
+        )
+
     raise HTTPException(
         status_code=403,
         detail="No authoritative alert store is configured.",
